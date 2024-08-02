@@ -1,0 +1,62 @@
+version: '3.9'
+services:
+  bot:
+    image: messages_bot
+    container_name: 'message_bot'
+    ports:
+      - "8000:8000"
+    depends_on:
+      - redis
+      - mongodb
+      - fastapi_messages
+    volumes:
+      - .:/app
+    networks:
+      - messages
+
+  nginx:
+    image: nginx:latest
+    container_name: web
+    volumes:
+      - ./nginx.conf:/nginx/nginx.conf:ro
+    depends_on:
+      - bot
+      - fastapi_messages
+    ports:
+      - "80:80"
+    networks:
+      - messages
+    
+  redis:
+    image: redis
+    container_name: 'redis_cash'
+    ports:
+      - "6379:6379"
+    networks:
+      - messages
+
+  mongodb:
+    image: mongo
+    container_name: 'mongodb_db'
+    ports:
+      - "27017:27017"
+    networks:
+      - messages
+  
+  fastapi_messages:
+    image: fastapimessages
+    container_name: 'fastapi_messages'
+    ports:
+      - "8001:8001"
+    depends_on:
+      - redis
+      - mongodb
+    networks:
+      - messages
+
+
+
+
+networks:
+  messages:
+    driver: bridge
